@@ -30,6 +30,11 @@ with tempfile.TemporaryDirectory() as tmp:
             page.goto(url,wait_until="networkidle")
             expect(page.get_by_role("heading",name="dev$pix.fits")).to_be_visible()
             expect(page.get_by_role("heading",name="检查器")).to_be_visible()
+            expect(page.locator(".obs")).to_have_css("color-scheme", "dark")
+            page.emulate_media(reduced_motion="reduce")
+            expect(page.locator("#display-tools details[open] dl")).to_have_css("animation-name", "none")
+            expect(page.locator(".source-list a").first).to_have_css("transition-duration", "0s")
+            page.emulate_media(reduced_motion="no-preference")
             assert page.locator(".luma polygon").get_attribute("points").count(",") > 60
             sidebar = page.locator(".source-list").bounding_box()
             canvas = page.locator(".field").bounding_box()

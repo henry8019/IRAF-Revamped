@@ -1,13 +1,17 @@
 * {box-sizing:border-box}
-:root {font:15px -apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei UI",sans-serif;color:#191b1f;color-scheme:light;background:#aac1e4}
-body {margin:0;min-height:100dvh;padding:clamp(14px,2.5vh,32px) clamp(14px,2vw,36px);background:radial-gradient(ellipse at 10% 0%,#becfe9,transparent 50%),radial-gradient(ellipse at 70% 110%,#7e9fcf,transparent 50%),linear-gradient(120deg,#93acd2,#b5c9ea 60%,#94b0dc);background-attachment:fixed}
+:root {font:15px -apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei UI",sans-serif;color-scheme:dark;
+  --ink:#ecf0f6; --muted:#a7b2c0; --rule:#3b444f;
+  --surface:#222831; --raised:#2a313b; --well:#101317;
+  --accent:#8bbfff; --selection:#294769;
+  color:var(--ink);background:#12171e}
+body {margin:0;min-height:100dvh;padding:clamp(14px,2.5vh,32px) clamp(14px,2vw,36px);background:radial-gradient(ellipse at 8% 0%,#304255,transparent 58%),radial-gradient(ellipse at 92% 100%,#303746,transparent 55%),#12171e;background-attachment:fixed}
 button,input,select {font:inherit}
 button {cursor:pointer;color:inherit}
 button:disabled {opacity:.48;cursor:default}
 button:focus-visible,a:focus-visible,input:focus-visible,summary:focus-visible,.field:focus-visible {outline:3px solid #478cf5;outline-offset:2px}
 [hidden] {display:none!important}
 article {min-width:0;min-height:0;display:flex;flex-direction:column}
-.field {position:relative;overflow:hidden;flex:1;background:#1b1b1d;touch-action:none;cursor:crosshair}
+.field {position:relative;overflow:hidden;flex:1;background:var(--well);touch-action:none;cursor:crosshair}
 .field.drag {outline:3px dashed #72acff;outline-offset:-5px}
 .field canvas {position:absolute;inset:0 auto auto 0;transform-origin:top left;image-rendering:pixelated;pointer-events:none}
 .result-layer {position:absolute;inset:0;overflow:hidden;pointer-events:none}
