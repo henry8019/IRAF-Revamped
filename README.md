@@ -1,5 +1,7 @@
 # 🔭 IRAF-Revamped
 
+**English** · [简体中文](README.zh-CN.md)
+
 IRAF-Revamped is our independent reimplementation of three workflows from **IRAF, the Image Reduction and Analysis Facility**. We build on the work of the IRAF developers and the community that maintains it today. Our reference for CCD reduction, photometry, and long-slit spectroscopy is the [IRAF Community Edition, v2.18.2](https://github.com/iraf-community/iraf/releases/tag/v2.18.2).
 
 Our contribution is a workbench that runs the calculations on your computer and opens the results in your browser. We use the original IRAF to check our results. One of our favorite checks is to hide two stars in a simulated exposure and see how much of their light we get back.
