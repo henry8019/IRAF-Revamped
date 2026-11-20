@@ -52,7 +52,7 @@ cd IRAF-Revamped
 
 ## 我们验证到了哪一步
 
-我们已在 Windows 和 WSL 下的 Ubuntu 24.04 上跑通这次模拟观测，并重新打开输出的 FITS 文件核对数值。真实观测夜数据和 macOS 实机验证仍待完成。
+我们已在 Windows 和 WSL 下的 Ubuntu 24.04 上跑通这次模拟观测，并重新打开输出的 FITS 文件核对数值。CI 在 Windows、macOS 和 Linux 上检查首次启动和离线重启，并在 Linux 的 Chromium 中测试界面交互。真实观测夜数据的科学验收和 macOS 桌面人工试用仍待完成。
 
 ## 参与开发
 

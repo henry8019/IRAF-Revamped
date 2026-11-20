@@ -52,7 +52,7 @@ The viewer opens and smooths your own two-dimensional FITS images. The CCD, phot
 
 ## What we’ve checked
 
-We’ve run the simulated night end to end on Windows and on Ubuntu 24.04 under WSL, reopening the FITS products to check their values. Testing with real observing-night data and running the workbench on macOS are still ahead.
+We’ve run the simulated night end to end on Windows and on Ubuntu 24.04 under WSL, reopening the FITS products to check their values. CI exercises first launch and offline relaunch on Windows, macOS and Linux. It also tests the desktop interface in Chromium on Linux. Validation with real observing-night data and a manual macOS desktop session are still ahead.
 
 ## Contributing
 
