@@ -6,13 +6,26 @@ IRAF-Revamped is our independent reimplementation of three workflows from **IRAF
 
 Our contribution is a workbench that runs the calculations on your computer and opens the results in your browser. We use the original IRAF to check our results. One of our favorite checks is to hide two stars in a simulated exposure and see how much of their light we get back.
 
+## 🚀 Clone and launch
+
+```sh
+git clone https://github.com/henry8019/IRAF-Revamped.git
+cd IRAF-Revamped
+```
+
+| Desktop | Start from the cloned folder |
+| --- | --- |
+| Windows | Double-click `Start.cmd` |
+| macOS | Double-click `Start.command` |
+| Linux (glibc) | Run `./Start.command` |
+
+The first launch needs internet access to prepare Python 3.12 and the locked dependencies. The built web interface ships in the repository. Run the same launcher again for offline use. Your default browser opens the local workbench on IRAF’s M51 image. Observation files are processed on your computer. Choose **退出** (Exit) in the viewer to shut down the service.
+
 ## 🧭 A first observing night
 
-**Availability.** These instructions are for the current preview build. The source and installers are still pending their first public release. [GitHub Releases](https://github.com/henry8019/IRAF-Revamped/releases)
+Choose a workflow in the left sidebar to inspect the outputs of the bundled simulated night.
 
-If you have the preview bundle, open `Start-IRAF.html` in your browser to explore the sample offline. If you have the installed app, launch **IRAF Workbench** and it will open a local browser session. Both start on **试用与安装** (Try & install). The sample contains the outputs of a completed reduction, so you can go straight to the data.
-
-1. **Compare the CCD frames.** Choose **从 CCD 预处理开始** (Start with CCD reduction). Drag the divider across the 30-second exposure to see what changed after calibration with three bias frames, three darks, and three flats. Both halves use the same grayscale stretch.
+1. **Compare the CCD frames.** Choose **CCD 预处理** (Start with CCD reduction). Drag the divider across the 30-second exposure to see what changed after calibration with three bias frames, three darks, and three flats. Both halves use the same grayscale stretch.
 2. **Find our two stars.** Open **孔径测光** (Aperture photometry) and select a source in the catalog. Its circle lights up on the image. Read its centroid and sky background alongside the measured flux and magnitude error.
 3. **Follow a spectral line.** Open **长缝光谱** (Long-slit spectroscopy). The curved stripe in the two-dimensional exposure is the trace we extracted. Seven lamp lines set the wavelength scale. Move the pointer along the one-dimensional spectrum, or focus the plot and use the arrow keys. The line we put at 5030 Å comes back at **5030.004 Å**.
 
@@ -27,7 +40,7 @@ Choose **下载 FITS** (Download FITS) on any of those pages to save the corresp
 
 ## Open a FITS image of your own
 
-In the installed workbench, choose **FITS 图像查看器** (FITS viewer) → **打开 FITS** (Open FITS). Select a file whose primary HDU contains a two-dimensional image. To try boxcar smoothing, set the window width and height to 3 pixels and tick **实时预览** (Live preview). Drag the divider to inspect the effect on a star, then choose **应用并另存 FITS** (Apply and save as FITS) to write a new file.
+In the workbench, choose **FITS 图像查看器** (FITS viewer) → **打开 FITS** (Open FITS). Select a file whose primary HDU contains a two-dimensional image. To try boxcar smoothing, open **显示设置** (Display settings), set the window width and height to 3 pixels and tick **实时预览** (Live preview). Drag the divider to inspect the effect on a star, then choose **应用并另存 FITS** (Apply and save as FITS) to write a new file.
 
 The viewer accepts your own images. The three workflow pages use the bundled observing night. In the development build we process custom observing nights through scripts.
 
