@@ -1,0 +1,24 @@
+name: Bug report / 故障报告
+description: Report a launcher, interface, or scientific result you can reproduce.
+body:
+  - type: input
+    id: environment
+    attributes:
+      label: Commit, operating system, and browser / 版本与环境
+      placeholder: e.g. git rev-parse --short HEAD, Ubuntu 24.04, Firefox
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce / 复现步骤
+      description: Include parameters or a small synthetic input if relevant. Remove private data and session tokens.
+    validations:
+      required: true
+  - type: textarea
+    id: result
+    attributes:
+      label: Expected and observed results / 预期与实际结果
+      description: For a scientific discrepancy, include the units and the source of the expected value.
+    validations:
+      required: true

@@ -1,4 +1,4 @@
-"""Exercise the desktop document window using the Python Playwright package and Edge."""
+"""Exercise the desktop document window using Playwright and Chromium."""
 import os
 from pathlib import Path
 import subprocess
@@ -21,7 +21,7 @@ with tempfile.TemporaryDirectory() as tmp:
             time.sleep(.1)
         url = ready.read_text()
         with sync_playwright() as p:
-            browser = p.chromium.launch(channel="msedge")
+            browser = p.chromium.launch(channel=os.environ.get("IRAF_BROWSER_CHANNEL"))
             page = browser.new_page(viewport={"width":1440,"height":900})
             errors = []
             page.on("pageerror", lambda error: errors.append(str(error)))

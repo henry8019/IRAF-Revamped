@@ -48,11 +48,15 @@ cd IRAF-Revamped
 
 在左侧导航打开「FITS 查看器」，点击「打开 FITS」，选择一个主 HDU（主数据单元）中存有二维图像的文件。想试试方框平滑，可以在右侧检查器中展开「方框平滑」，把窗口宽、高都设为 3 像素，勾选「实时预览」，再拖动分界线看看星像边缘的变化。满意后点击「应用并另存 FITS」，结果会写入新文件。
 
-查看器可以处理你自己的图像。CCD、测光和光谱三个网页流程目前展示内置样例；在开发版里，我们通过脚本处理自己的观测夜数据。
+查看器可以打开并平滑你自己的二维 FITS 图像。CCD 预处理、测光和光谱三个流程页展示的是内置模拟观测夜预先计算好的结果。
 
 ## 我们验证到了哪一步
 
-我们已在 Windows 和 WSL 下的 Ubuntu 24.04 上跑通这次模拟观测，并重新打开输出的 FITS 文件核对数值。真实观测夜数据和 macOS 实机验证仍待完成。
+我们已在 Windows 和 WSL 下的 Ubuntu 24.04 上跑通这次模拟观测，并重新打开输出的 FITS 文件核对数值。CI 在 Windows、macOS 和 Linux 上检查首次启动和离线重启，并在 Linux 的 Chromium 中测试界面交互。真实观测夜数据的科学验收和 macOS 桌面人工试用仍待完成。
+
+## 参与开发
+
+开发环境、测试命令和提交方式见[中文贡献指南](CONTRIBUTING.zh-CN.md)。复现了故障或有改进想法，可以[创建 Issue](https://github.com/henry8019/IRAF-Revamped/issues/new/choose)。[社区行为准则](CODE_OF_CONDUCT.md) · [私下报告安全问题](SECURITY.md) · [自动检查记录](https://github.com/henry8019/IRAF-Revamped/actions/workflows/ci.yml)
 
 [BSD 3-Clause 开源许可证](LICENSE)
 
