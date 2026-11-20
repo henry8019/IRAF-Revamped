@@ -21,6 +21,12 @@ cd IRAF-Revamped
 
 首次启动需联网准备 Python 3.12 和锁定版本的依赖。仓库已包含编译好的网页。以后运行同一启动文件即可离线使用。默认浏览器会打开本机工作台，首屏是 IRAF 自带的 M51 星系图。观测文件在本机处理。点击窗口左上角红色按钮，再确认「退出工作台」，即可关闭本机服务。
 
+## 从原版 IRAF 到本机工作台
+
+原版用户在 CL 命令行加载任务包，用 `eparam` 调参数，再运行任务。例如在 `images → imfilter` 中输入 `boxcar dev$pix m51_smooth.fits 3 3`，就会将样图按 3 × 3 像素平滑并输出一个新文件。新版对应的操作是「FITS 查看器 → 方框平滑 → 实时预览 → 应用并另存 FITS」。[IRAF 命令语言](https://iraf.readthedocs.io/en/latest/tasks/language/intro.html) · [boxcar 手册](https://iraf.readthedocs.io/en/latest/tasks/images/imfilter/boxcar.html)
+
+拖标题栏移动工作台，拖四边或四角调整窗口大小。拖星图可平移视野，滚轮可缩放图像，点击工具栏的倍率可恢复适应窗口。用 Tab 聚焦标题栏后，也可以用方向键移动窗口，用 Shift 加方向键调整大小。
+
 ## 🧭 跟着一次模拟观测试用
 
 从左侧导航选择三条流程，查看模拟观测夜已生成的产物。

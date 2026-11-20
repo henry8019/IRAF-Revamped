@@ -40,6 +40,48 @@ with tempfile.TemporaryDirectory() as tmp:
             original = page.locator(".field canvas").bounding_box()
             page.get_by_role("button",name="放大",exact=True).click()
             assert page.locator(".field canvas").bounding_box()["width"] > original["width"]
+            def drag(locator, dx, dy):
+                box = locator.bounding_box()
+                x, y = box["x"] + box["width"]/2, box["y"] + box["height"]/2
+                page.mouse.move(x,y)
+                page.mouse.down()
+                page.mouse.move(x+dx,y+dy,steps=5)
+                page.mouse.up()
+
+            window = page.locator(".obs")
+            original_window = window.bounding_box()
+            zoom = page.get_by_role("button",name="适应窗口")
+            manual_zoom = zoom.inner_text()
+            drag(page.locator('[data-edge="se"]'), -150, -110)
+            resized = window.bounding_box()
+            assert abs(original_window["width"] - resized["width"] - 150) <= 1
+            assert abs(original_window["height"] - resized["height"] - 110) <= 1
+            expect(zoom).to_have_text(manual_zoom)
+            drag(page.get_by_role("heading",name="dev$pix.fits"), 85, 65)
+            moved = window.bounding_box()
+            assert abs(moved["x"] - resized["x"] - 85) <= 1, (moved,resized)
+            assert abs(moved["y"] - resized["y"] - 65) <= 1
+            drag(page.locator(".field"),12,10)
+            assert window.bounding_box() == moved
+            drag(page.locator('[data-edge="nw"]'),10,15)
+            positioned = window.bounding_box()
+            assert abs(positioned["width"] + 10 - moved["width"]) <= 1
+            assert abs(positioned["x"] - moved["x"] - 10) <= 1
+            titlebar = page.locator(".windowbar")
+            titlebar.focus()
+            titlebar.press("ArrowRight")
+            assert abs(window.bounding_box()["x"] - positioned["x"] - 12) <= 1
+            titlebar.press("Shift+ArrowLeft")
+            assert abs(positioned["width"] - window.bounding_box()["width"] - 12) <= 1
+            positioned = window.bounding_box()
+            page.locator(".document-name").dblclick()
+            assert window.bounding_box()["x"] == 0
+            page.locator(".document-name").dblclick()
+            assert window.bounding_box() == positioned
+            page.get_by_role("link",name="CCD 预处理").click()
+            assert window.bounding_box() == positioned
+            page.get_by_role("link",name="FITS 查看器").click()
+            expect(page.get_by_role("heading",name="dev$pix.fits")).to_be_visible()
             page.get_by_role("button",name="适应窗口").click()
             page.get_by_role("slider",name="黑点").fill("3")
             page.get_by_role("button",name="恢复自动范围").click()
@@ -49,11 +91,13 @@ with tempfile.TemporaryDirectory() as tmp:
             page.get_by_role("button",name="切换窗口大小").click()
             assert page.locator(".obs").bounding_box()["x"] == 0
             page.get_by_role("button",name="切换窗口大小").click()
+            assert window.bounding_box() == positioned
             page.get_by_role("button",name="收起窗口").click()
             expect(page.locator("#workspace")).to_be_hidden()
             page.get_by_role("button",name="还原窗口",exact=True).last.click()
             expect(page.locator("#workspace")).to_be_visible()
             page.set_viewport_size({"width":1280,"height":720})
+            page.wait_for_function("document.querySelector('.obs').getBoundingClientRect().right <= innerWidth + 1")
             page.locator("input[type=file]").set_input_files(root/"examples/observing-night/results/calibrated-field.fits")
             expect(page.get_by_role("heading",name="calibrated-field.fits")).to_be_visible()
             page.get_by_text("方框平滑",exact=True).click()

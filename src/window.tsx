@@ -2,6 +2,8 @@ import { createContext, useContext, useRef, useState, type ReactNode } from "rea
 import { createPortal } from "react-dom";
 import { Icon, workflows } from "./navigation";
 
+import { edges, useWindowFrame } from "./useWindowFrame";
+
 const ToolbarHost = createContext<HTMLDivElement|null>(null);
 
 export function DocumentBar({title, children}:{title:string;children?:ReactNode}) {
@@ -13,6 +15,7 @@ export function DocumentBar({title, children}:{title:string;children?:ReactNode}
 }
 
 export function Shell({view,headers,children}:{view:string;headers:Record<string,string>;children:ReactNode}) {
+  const layout=useWindowFrame();
   const [host,setHost]=useState<HTMLDivElement|null>(null);
   const [sidebar,setSidebar]=useState(true);
   const [minimized,setMinimized]=useState(false);
@@ -34,9 +37,24 @@ export function Shell({view,headers,children}:{view:string;headers:Record<string
     return <a key={id} href={"?view="+id} aria-current={view===id?"page":undefined}><Icon name={icon}/>{label}</a>;
   }
   if(closed) return <main className="closed-window"><h1>工作台已退出</h1><p>可以关闭此标签页。</p></main>;
-  return <div className={["obs",maximized?"maximized":"",minimized?"minimized":"",sidebar?"":"without-sidebar"].join(" ")}>
+  const movable=!maximized && !minimized;
+  const geometry=layout.frame && !maximized ? {...layout.frame,position:"fixed" as const,height:minimized?60:layout.frame.height} : undefined;
+  return <div ref={layout.element} style={geometry} {...layout.events}
+    onPointerDown={e=>{
+      if(movable && (e.target as Element).closest(".windowbar")) layout.start(e,"move");
+    }}
+    onDoubleClick={e=>{
+      const el=e.target as Element;
+      if(!minimized && el.closest(".windowbar") && !el.closest("button")) setMaximized(!maximized);
+    }} className={["obs",maximized?"maximized":"",minimized?"minimized":"",sidebar?"":"without-sidebar"].join(" ")}>
     <a className="skip" href="#workspace">跳到工作区</a>
-    <header className="windowbar" onDoubleClick={e=>{if(!(e.target as Element).closest("button"))setMaximized(!maximized);}}>
+    <header className="windowbar" tabIndex={0} aria-label="窗口标题栏" title="拖动以移动窗口，双击以切换大小"
+      onKeyDown={e=>{
+        if(!movable || e.target!==e.currentTarget) return;
+        const direction:Record<string,[number,number]>={ArrowLeft:[-12,0],ArrowRight:[12,0],ArrowUp:[0,-12],ArrowDown:[0,12]};
+        const step=direction[e.key];
+        if(step){e.preventDefault();layout.nudge(e.shiftKey?"se":"move",...step);}
+      }}>
       <div className="window-tools"><div className="lights">
         <button className="close-light" title="退出工作台" aria-label="退出" onClick={()=>confirm.current?.showModal()}><span>×</span></button>
         <button className="mini-light" title={minimized?"还原窗口":"收起窗口"} aria-label={minimized?"还原窗口":"收起窗口"} onClick={()=>setMinimized(!minimized)}><span>−</span></button>
@@ -51,6 +69,8 @@ export function Shell({view,headers,children}:{view:string;headers:Record<string
       <div className="source-bottom">{link("start","试用与安装","download")}</div>
     </div>
     <div id="workspace" hidden={minimized} tabIndex={-1}><ToolbarHost.Provider value={host}>{children}</ToolbarHost.Provider></div>
+    {movable && edges.map(edge=><div key={edge} aria-hidden="true" data-edge={edge} className="window-edge"
+      onPointerDown={e=>layout.start(e,edge)}/>)}
     <dialog ref={confirm}><h2>退出工作台？</h2><p>退出将结束当前会话，已保存的 FITS 文件仍在电脑上。</p>
       {message&&<p role="alert">{message}</p>}<div><button autoFocus onClick={()=>confirm.current?.close()}>取消</button><button onClick={quit}>退出工作台</button></div></dialog>
   </div>;

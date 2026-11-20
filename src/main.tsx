@@ -61,6 +61,7 @@ function App() {
     [error, setError] = useState("");
   const [drag, setDrag] = useState(false);
   const [view, setView] = useState<View>({ scale: 1, x: 0, y: 0 });
+  const autoFit=useRef(true);
   const [bounds, setBounds] = useState({ w: 1, h: 1 });
   const [range, setRange] = useState<[number, number]>([0, 1]);
   const [cursor, setCursor] = useState<{
@@ -183,6 +184,7 @@ function App() {
         if (Number.isFinite(pixels[i])) sorted.push(pixels[i]);
       sorted.sort((a, b) => a - b);
       if (id !== seq.current) return;
+      autoFit.current=true;
       setFrame({
         ...meta,
         pixels,
@@ -213,7 +215,8 @@ function App() {
     return () => observer.disconnect();
   }, []);
   function fit() {
-    if (!frame) return;
+    if (!frame || !bounds.w || !bounds.h) return;
+    autoFit.current=true;
     setCursor(null);
     const scale =
       Math.min(bounds.w / frame.width, bounds.h / frame.height) * 0.96;
@@ -223,7 +226,7 @@ function App() {
       y: (bounds.h - frame.height * scale) / 2,
     });
   }
-  useEffect(fit, [frame, bounds]);
+  useEffect(()=>{ if(autoFit.current) fit(); else setCursor(null); }, [frame, bounds]);
   const quantile = (p: number) =>
     frame?.sorted[Math.floor(((frame.sorted.length - 1) * p) / 100)] ?? 0;
   const low = quantile(range[0]),
@@ -237,6 +240,7 @@ function App() {
       drawPixels(resultCanvas.current, frame, preview, low, high);
   }, [frame, preview, low, high]);
   function zoom(factor: number, x = bounds.w / 2, y = bounds.h / 2) {
+    autoFit.current=false;
     setCursor(null);
     setView((old) => {
       const fitScale = frame
@@ -316,6 +320,7 @@ function App() {
               if (e.key === "+" || e.key === "=") zoom(1.25);
               else if (e.key === "-") zoom(0.8);
               else if (e.key.startsWith("Arrow")) {
+                autoFit.current=false;
                 e.preventDefault();
                 setView((v) => ({
                   ...v,
@@ -363,6 +368,7 @@ function App() {
               const dx = last.current ? e.clientX - last.current.x : 0,
                 dy = last.current ? e.clientY - last.current.y : 0;
               if (last.current) {
+                if(dx || dy) autoFit.current=false;
                 last.current = { x: e.clientX, y: e.clientY };
                 setView((v) => ({ ...v, x: v.x + dx, y: v.y + dy }));
               }

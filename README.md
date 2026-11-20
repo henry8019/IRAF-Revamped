@@ -21,6 +21,12 @@ cd IRAF-Revamped
 
 The first launch needs internet access to prepare Python 3.12 and the locked dependencies. The built web interface ships in the repository. Run the same launcher again for offline use. Your default browser opens the local workbench on IRAF’s M51 image. Observation files are processed on your computer. Use the red window control and confirm **退出工作台** (Quit workbench) to stop the local service.
 
+## Moving from IRAF CL to the workbench
+
+In the original IRAF command language, you load a task package, edit parameters with `eparam`, and run the task. In `images → imfilter`, for example, `boxcar dev$pix m51_smooth.fits 3 3` smooths the sample image into a new file. In the workbench, open **方框平滑** (Boxcar) in the FITS viewer, choose a 3 × 3 window, enable live preview, and save a new FITS file. [IRAF command language](https://iraf.readthedocs.io/en/latest/tasks/language/intro.html) · [boxcar reference](https://iraf.readthedocs.io/en/latest/tasks/images/imfilter/boxcar.html)
+
+Drag the title bar to move the window, or drag any edge or corner to resize it. Dragging the image pans the view and the wheel zooms it. Click the zoom percentage to fit the image again. With the title bar focused, arrow keys move the window and Shift + arrow keys resize it.
+
 ## 🧭 A first observing night
 
 Choose a workflow in the left sidebar to inspect the outputs of the bundled simulated night.

@@ -3,6 +3,14 @@ import { DocumentBar } from "./window";
 export function Guide() {
   return <main className="desk guide">
     <DocumentBar title="试用与安装"/>
+    <section><h2>第一次使用</h2>
+      <p>打开工作台就能看到 M51 样图。展开检查器中的「方框平滑」，将宽和高设为 3，勾选「实时预览」。拖动图像分界线比较星像，再点「应用并另存 FITS」保存新文件。处理自己的二维图像时，先点「打开 FITS」。</p>
+      <p>拖标题栏移动窗口，拖任一边缘或角调整大小。拖星图平移视野，滚轮缩放。点击工具栏的百分比可重新适应窗口。用 Tab 聚焦标题栏后，方向键移动窗口，Shift 加方向键调整大小。</p>
+    </section>
+    <section><h2>用过原版 IRAF？</h2>
+      <p>原版在 CL 命令行加载任务包，用 <code>eparam</code> 调参数，再运行任务。例如在 <code>imfilter</code> 中执行 <code>boxcar dev$pix m51_smooth.fits 3 3</code>，对应上面的 3 × 3 方框平滑。</p>
+      <p>原版的 <code>ccdproc</code> 校准 CCD 图像、<code>phot</code> 做孔径测光、<code>apall</code> 提取一维光谱。当前网页版的这三项入口供你检查内置观测夜已算好的结果。打开自己的 FITS 后可查看、平滑和导出，三项流程的自有数据输入仍待接入。</p>
+    </section>
     <section className="guide-start"><h2>模拟观测夜</h2><p>用内置曝光核对图像校正、恒星测光与光谱提取的结果。每条流程都可下载 FITS。</p>
       <a className="download" href="?view=ccd">打开 CCD 工作区 →</a>
     </section>

@@ -1,5 +1,6 @@
 
 .obs {
+  position:relative;
   --side:clamp(180px,17vw,252px); --panel:clamp(250px,23vw,365px);
   --ink:#1b1c20; --muted:#565c65; --rule:#d2d3d7; --blue:#0969ee;
   display:grid;grid-template-columns:var(--side) minmax(0,1fr);grid-template-rows:60px minmax(0,1fr);
@@ -83,3 +84,15 @@
 .level-row input::-webkit-slider-thumb {appearance:none;width:17px;height:17px;background:#fff;border-radius:50%;border:1px solid #d9d9de;box-shadow:0 1px 3px #0003}
 .level-row input::-moz-range-thumb {width:16px;height:16px;background:#fff;border-radius:50%;border:1px solid #d9d9de;box-shadow:0 1px 3px #0003}
 .viewer aside .reset {display:block;margin:5px auto 0}
+
+.windowbar,.window-edge {touch-action:none}
+.obs:not(.maximized):not(.minimized) .windowbar {cursor:grab}
+.obs:not(.maximized):not(.minimized) .windowbar:active {cursor:grabbing}
+.window-edge {position:absolute;z-index:3;user-select:none}
+.window-edge[data-edge=n],.window-edge[data-edge=s] {inset-inline:10px;height:6px;cursor:ns-resize}
+.window-edge[data-edge=n] {top:0}.window-edge[data-edge=s] {bottom:0}
+.window-edge[data-edge=w],.window-edge[data-edge=e] {inset-block:10px;width:6px;cursor:ew-resize}
+.window-edge[data-edge=w] {left:0}.window-edge[data-edge=e] {right:0}
+.window-edge[data-edge=ne],.window-edge[data-edge=nw],.window-edge[data-edge=se],.window-edge[data-edge=sw] {width:13px;height:13px}
+.window-edge[data-edge=ne] {right:0;top:0;cursor:nesw-resize}.window-edge[data-edge=sw] {bottom:0;left:0;cursor:nesw-resize}
+.window-edge[data-edge=nw] {left:0;top:0;cursor:nwse-resize}.window-edge[data-edge=se] {right:0;bottom:0;cursor:nwse-resize}
