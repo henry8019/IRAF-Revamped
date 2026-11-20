@@ -48,11 +48,15 @@ Choose **下载 FITS** (Download FITS) on any of those pages to save the corresp
 
 In the workbench, choose **FITS 查看器** (FITS viewer) → **打开 FITS** (Open FITS). Select a file whose primary HDU contains a two-dimensional image. To try boxcar smoothing, expand **方框平滑** (Boxcar) in the inspector, set the window width and height to 3 pixels and tick **实时预览** (Live preview). Drag the divider to inspect the effect on a star, then choose **应用并另存 FITS** (Apply and save as FITS) to write a new file.
 
-The viewer accepts your own images. The three workflow pages use the bundled observing night. In the development build we process custom observing nights through scripts.
+The viewer opens and smooths your own two-dimensional FITS images. The CCD, photometry and spectroscopy pages display precomputed products from the bundled simulated night.
 
 ## What we’ve checked
 
 We’ve run the simulated night end to end on Windows and on Ubuntu 24.04 under WSL, reopening the FITS products to check their values. Testing with real observing-night data and running the workbench on macOS are still ahead.
+
+## Contributing
+
+See the [contributor guide](CONTRIBUTING.md) for setup, tests and pull requests. Use [Issues](https://github.com/henry8019/IRAF-Revamped/issues/new/choose) for reproducible bugs and ideas. [Community conduct](CODE_OF_CONDUCT.md) · [Private security reports](SECURITY.md) · [CI results](https://github.com/henry8019/IRAF-Revamped/actions/workflows/ci.yml)
 
 [BSD 3-Clause license](LICENSE)
 
