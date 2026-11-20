@@ -1,5 +1,6 @@
 {
   "name": "iraf-workbench",
+  "version": "0.2.0",
   "private": true,
   "scripts": {"build": "tsc --noEmit && vite build"},
   "dependencies": {"react": "^19.0.0", "react-dom": "^19.0.0"},

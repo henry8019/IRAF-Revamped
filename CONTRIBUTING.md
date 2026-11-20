@@ -31,3 +31,7 @@ uv run --locked --group test python tests/desktop_ui.py
 For a numerical change, include a small synthetic or shareable input, units, the expected result and tolerance, and how you derived them. Use original IRAF as a reference. If its output conflicts with the scientific definition, document both values and test the scientifically defined result.
 
 Open a pull request against `main` describing the change and the checks you ran. Maintainers can use the linked CI results to review the build and launcher checks on all three operating systems. For changes to numerical output, review the reference values and tolerance alongside the code.
+
+## Cutting a release
+
+Update the application version in `pyproject.toml` and `package.json`, refresh both lockfiles, and rebuild `dist/`. Update the bilingual changelog and download links in both READMEs. After the release PR and the merged commit pass CI, tag that commit as `vX.Y.Z` and publish the changelog entry on GitHub Releases. Download and extract the tagged archive and run the launcher smoke test from that copy.

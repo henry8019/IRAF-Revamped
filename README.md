@@ -8,6 +8,8 @@ Our contribution is a workbench that runs the calculations on your computer and 
 
 ## 🚀 Clone and launch
 
+For the current release, [download the workbench ZIP](https://github.com/henry8019/IRAF-Revamped/archive/refs/tags/v0.2.0.zip) and extract it before running the launcher below. The archive includes the built interface. [v0.2.0 release notes](CHANGELOG.md)
+
 ```sh
 git clone https://github.com/henry8019/IRAF-Revamped.git
 cd IRAF-Revamped
