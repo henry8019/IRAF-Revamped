@@ -54,7 +54,7 @@ function drawPixels(
   ctx.putImageData(image, 0, 0);
 }
 
-function App() {
+function App({visible}:{visible:boolean}) {
   const [frame, setFrame] = useState<Frame | null>(null);
   const [settings,setSettings]=useState(true);
   const [busy, setBusy] = useState(true),
@@ -291,14 +291,14 @@ function App() {
       ? (onResult ? preview : frame.pixels)[cursor.y * frame.width + cursor.x]
       : null;
   return (
-    <main className="desk viewer">
-      <DocumentBar title={frame?.name??"FITS 查看器"}>
+    <main className="desk viewer" hidden={!visible}>
+      {visible && <DocumentBar title={frame?.name??"FITS 查看器"}>
         <div className="zoom-group"><button aria-label="缩小" onClick={()=>zoom(.8)}>−</button>
           <button className="zoom-value" aria-label="适应窗口" title="适应窗口" onClick={fit}>{Math.round(view.scale*100)}%</button>
           <button aria-label="放大" onClick={()=>zoom(1.25)}>＋</button></div>
         {!window.irafTrial&&<button className="toolbar-button" onClick={()=>file.current?.click()}><Icon name="folder"/>打开 FITS</button>}
         <button className="toolbar-button inspector-toggle" title="显示或隐藏检查器" aria-label="显示设置" aria-expanded={settings} aria-controls="display-tools" onClick={()=>setSettings(!settings)}><Icon name="info"/></button>
-      </DocumentBar>
+      </DocumentBar>}
       <input
         type="file"
         hidden
@@ -588,9 +588,41 @@ function App() {
     </main>
   );
 }
-const view = new URLSearchParams(location.search).get("view") || "image";
-const flow = ["ccd","phot","spec"].indexOf(view);
-createRoot(document.getElementById("root")!).render(
-  <Shell view={view} headers={headers}>{flow>=0 ? <Observations headers={headers} active={flow}/> :
-    view==="image" ? <App/> : <Guide/>}</Shell>
-);
+function currentView() {
+  return new URLSearchParams(location.search).get("view") || "image";
+}
+
+function Workbench() {
+  const [view,setView]=useState(currentView);
+  const [imageOpened,setImageOpened]=useState(view==="image");
+  const flow=["ccd","phot","spec"].indexOf(view);
+
+  function show(next:string) {
+    if(next==="image") setImageOpened(true);
+    setView(next);
+  }
+  useEffect(()=>{
+    const sync=()=>show(currentView());
+    window.addEventListener("popstate",sync);
+    return ()=>window.removeEventListener("popstate",sync);
+  },[]);
+
+  function navigate(link:HTMLAnchorElement) {
+    const next=new URL(link.href).searchParams.get("view");
+    if(!next) return false;
+    if(next!==view) {
+      try {history.pushState(null,"",link.href);}
+      catch {return false;}
+      show(next);
+    }
+    return true;
+  }
+
+  return <Shell view={view} headers={headers} navigate={navigate}>
+    {imageOpened && <App visible={view==="image"}/>}
+    <Observations headers={headers} active={flow}/>
+    {flow<0 && view!=="image" && <Guide/>}
+  </Shell>;
+}
+
+createRoot(document.getElementById("root")!).render(<Workbench/>);

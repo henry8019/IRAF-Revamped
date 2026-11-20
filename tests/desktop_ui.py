@@ -25,6 +25,8 @@ with tempfile.TemporaryDirectory() as tmp:
             page = browser.new_page(viewport={"width":1440,"height":900})
             errors = []
             page.on("pageerror", lambda error: errors.append(str(error)))
+            requests = []
+            page.on("request", lambda req: requests.append((req.resource_type,req.url.split("?",1)[0])))
             page.goto(url,wait_until="networkidle")
             expect(page.get_by_role("heading",name="dev$pix.fits")).to_be_visible()
             expect(page.get_by_role("heading",name="检查器")).to_be_visible()
@@ -82,6 +84,8 @@ with tempfile.TemporaryDirectory() as tmp:
             assert window.bounding_box() == positioned
             page.get_by_role("link",name="FITS 查看器").click()
             expect(page.get_by_role("heading",name="dev$pix.fits")).to_be_visible()
+            assert sum(kind=="document" for kind,_ in requests) == 1, "Switching views reloaded the desktop"
+            expect(zoom).to_have_text(manual_zoom)
             page.get_by_role("button",name="适应窗口").click()
             page.get_by_role("slider",name="黑点").fill("3")
             page.get_by_role("button",name="恢复自动范围").click()
@@ -119,6 +123,19 @@ with tempfile.TemporaryDirectory() as tmp:
             expect(page.get_by_role("slider")).to_have_attribute("aria-valuenow","1")
             page.get_by_role("link",name="试用与安装").click()
             expect(page.get_by_role("heading",name="试用与安装")).to_be_visible()
+            page.get_by_role("link",name="打开 CCD 工作区").click()
+            expect(page.get_by_role("slider",name="原图与校正图分界线")).to_have_value("51")
+            page.go_back()
+            expect(page.get_by_role("heading",name="试用与安装")).to_be_visible()
+            page.go_forward()
+            expect(page.get_by_role("link",name="CCD 预处理")).to_have_attribute("aria-current","page")
+            for link in ["长缝光谱","孔径测光","CCD 预处理","FITS 查看器"]:
+                page.get_by_role("link",name=link,exact=True).click()
+            expect(page.get_by_role("heading",name="calibrated-field.fits")).to_be_visible()
+            expect(page.get_by_label("实时预览")).to_be_checked()
+            assert sum(kind=="document" for kind,_ in requests) == 1
+            for endpoint in ("/api/current","/api/observations"):
+                assert sum(path.endswith(endpoint) for _,path in requests) == 1, endpoint
             page.get_by_role("button",name="退出",exact=True).click()
             page.get_by_role("button",name="取消").click()
             expect(page.get_by_role("dialog")).to_be_hidden()

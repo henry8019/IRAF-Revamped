@@ -14,7 +14,7 @@ export function DocumentBar({title, children}:{title:string;children?:ReactNode}
   </>,host);
 }
 
-export function Shell({view,headers,children}:{view:string;headers:Record<string,string>;children:ReactNode}) {
+export function Shell({view,headers,navigate,children}:{view:string;headers:Record<string,string>;navigate:(link:HTMLAnchorElement)=>boolean;children:ReactNode}) {
   const layout=useWindowFrame();
   const [host,setHost]=useState<HTMLDivElement|null>(null);
   const [sidebar,setSidebar]=useState(true);
@@ -40,6 +40,11 @@ export function Shell({view,headers,children}:{view:string;headers:Record<string
   const movable=!maximized && !minimized;
   const geometry=layout.frame && !maximized ? {...layout.frame,position:"fixed" as const,height:minimized?60:layout.frame.height} : undefined;
   return <div ref={layout.element} style={geometry} {...layout.events}
+    onClick={e=>{
+      if(e.defaultPrevented || e.button!==0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+      const link=(e.target as Element).closest<HTMLAnchorElement>('a[href^="?view="]');
+      if(link && !link.target && !link.hasAttribute("download") && navigate(link)) e.preventDefault();
+    }}
     onPointerDown={e=>{
       if(movable && (e.target as Element).closest(".windowbar")) layout.start(e,"move");
     }}

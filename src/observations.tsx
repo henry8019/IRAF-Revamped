@@ -1,12 +1,12 @@
 import { DocumentBar } from "./window";
 import { Icon, workflows } from "./navigation";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 
 type Star = {ID:number; XCENTER:number; YCENTER:number; MSKY:number; FLUX:number; MAG:number; MERR:number};
 type Data = {wave:number[]; flux:number[]; unit:string; waveUnit:string; raw:number[][]; ccd:number[][]; slit:number[][]; stars:Star[]};
 function Raster({pixels, label, stars=[], selected=0, onSelect, limits}:{pixels:number[][];label:string;stars?:Star[];selected?:number;onSelect?:(index:number)=>void;limits?:[number,number]}) {
   const ref=useRef<HTMLCanvasElement>(null);
-  useEffect(()=>{
+  useLayoutEffect(()=>{
     const canvas=ref.current!, ctx=canvas.getContext("2d")!;
     const width=pixels[0].length, height=pixels.length;
     canvas.width=width; canvas.height=height;
@@ -107,6 +107,7 @@ export function Observations({headers,active}:{headers:Record<string,string>;act
     const y=d.ccd.length-1-Math.floor((e.clientY-box.top)*d.ccd.length/box.height);
     if(x>=0&&y>=0&&x<d.ccd[0].length&&y<d.ccd.length) setPixel([x,y]);
   }
+  if(active<0) return null;
   return <main className="desk science">
     <DocumentBar title={current.file}>
       <button className="toolbar-button" onClick={download} disabled={!d}><Icon name="download"/>下载 FITS</button>
