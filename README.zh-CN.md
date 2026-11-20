@@ -49,3 +49,5 @@ cd IRAF-Revamped
 我们已在 Windows 和 WSL 下的 Ubuntu 24.04 上跑通这次模拟观测，并重新打开输出的 FITS 文件核对数值。真实观测夜数据和 macOS 实机验证仍待完成。
 
 [BSD 3-Clause 开源许可证](LICENSE)
+
+dev$pix 样图来自 IRAF。[IRAF 版权声明](licenses/iraf/COPYRIGHT) · [React、React DOM 和 Scheduler 许可证](licenses/React-MIT.txt)

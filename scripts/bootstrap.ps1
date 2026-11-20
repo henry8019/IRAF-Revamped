@@ -12,8 +12,14 @@ try {
     $archive = Join-Path $stage.FullName 'uv.zip'
     $uri = "https://github.com/astral-sh/uv/releases/download/0.13.9/uv-$target-pc-windows-msvc.zip"
     Invoke-WebRequest -UseBasicParsing -Uri $uri -OutFile $archive
-    if ((Get-FileHash -LiteralPath $archive -Algorithm SHA256).Hash -ne $digest) { throw 'Download checksum mismatch.' }
-    Expand-Archive -LiteralPath $archive -DestinationPath $stage.FullName
+    $stream = [IO.File]::OpenRead($archive)
+    $sha = [Security.Cryptography.SHA256]::Create()
+    try {
+        $actual = [BitConverter]::ToString($sha.ComputeHash($stream)).Replace('-', '')
+        if ($actual -ne $digest) { throw 'Download checksum mismatch.' }
+    } finally { $stream.Dispose(); $sha.Dispose() }
+    Add-Type -AssemblyName System.IO.Compression.FileSystem
+    [IO.Compression.ZipFile]::ExtractToDirectory($archive, $stage.FullName)
     $exe = Get-ChildItem -LiteralPath $stage.FullName -Filter uv.exe -Recurse -File
     if (@($exe).Count -ne 1) { throw 'Missing uv launcher in the downloaded archive.' }
     $destination = Join-Path $runtime.FullName 'uv.exe'

@@ -49,3 +49,5 @@ The viewer accepts your own images. The three workflow pages use the bundled obs
 We’ve run the simulated night end to end on Windows and on Ubuntu 24.04 under WSL, reopening the FITS products to check their values. Testing with real observing-night data and running the workbench on macOS are still ahead.
 
 [BSD 3-Clause license](LICENSE)
+
+The dev$pix sample comes from IRAF. [IRAF copyright](licenses/iraf/COPYRIGHT) · [React, React DOM and Scheduler license](licenses/React-MIT.txt)
