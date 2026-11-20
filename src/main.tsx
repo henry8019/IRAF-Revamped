@@ -1,7 +1,11 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { createRoot } from "react-dom/client";
 import "./style.css";
-import { Guide, Shell } from "./guide";
+import "./observations.css";
+import "./guide.css";
+import { Guide } from "./guide";
+import { DocumentBar, Shell } from "./window";
+import { Icon } from "./navigation";
 import { Observations } from "./observations";
 
 type Frame = {
@@ -11,6 +15,8 @@ type Frame = {
   bitpix: number;
   unit: string;
   object: string;
+  filter?: string;
+  exposure?: string;
   name: string;
   pixels: Float64Array;
   sorted: number[];
@@ -50,11 +56,10 @@ function drawPixels(
 
 function App() {
   const [frame, setFrame] = useState<Frame | null>(null);
-  const [settings,setSettings]=useState(false);
+  const [settings,setSettings]=useState(true);
   const [busy, setBusy] = useState(true),
     [error, setError] = useState("");
-  const [exited, setExited] = useState(false),
-    [drag, setDrag] = useState(false);
+  const [drag, setDrag] = useState(false);
   const [view, setView] = useState<View>({ scale: 1, x: 0, y: 0 });
   const [bounds, setBounds] = useState({ w: 1, h: 1 });
   const [range, setRange] = useState<[number, number]>([0, 1]);
@@ -200,13 +205,13 @@ function App() {
     void open();
   }, []);
   useEffect(() => {
-    if (!field.current || exited) return;
+    if (!field.current) return;
     const observer = new ResizeObserver(([r]) =>
       setBounds({ w: r.contentRect.width, h: r.contentRect.height }),
     );
     observer.observe(field.current);
     return () => observer.disconnect();
-  }, [exited]);
+  }, []);
   function fit() {
     if (!frame) return;
     setCursor(null);
@@ -250,7 +255,7 @@ function App() {
   }
   useEffect(() => {
     const el = field.current;
-    if (!el || exited) return;
+    if (!el) return;
     function wheel(e: WheelEvent) {
       e.preventDefault();
       const b = el!.getBoundingClientRect();
@@ -262,25 +267,19 @@ function App() {
     }
     el.addEventListener("wheel", wheel, { passive: false });
     return () => el.removeEventListener("wheel", wheel);
-  }, [exited, frame, bounds]);
-  async function quit() {
-    try {
-      const r = await fetch("/api/exit", { method: "POST", headers });
-      if (!r.ok) throw Error();
-      setExited(true);
-      setFrame(null);
-      sessionStorage.removeItem("session");
-    } catch {
-      setError("退出未完成，请检查本机服务。");
+  }, [frame, bounds]);
+  const distribution = useMemo(()=>{
+    const values=frame?.sorted;
+    if(!values?.length) return "";
+    const min=values[0], max=values[values.length-1];
+    const bins=Array<number>(80).fill(0);
+    for(const value of values) {
+      const i=Math.floor((value-min)/(max-min||1)*bins.length);
+      bins[Math.min(i,bins.length-1)]++;
     }
-  }
-  if (exited)
-    return (
-      <main className="end">
-        <h1>工作台已退出</h1>
-        <p>可以关闭此标签页。</p>
-      </main>
-    );
+    const peak=Math.log1p(Math.max(...bins));
+    return "0,60 "+bins.map((n,i)=>`${i+0.5},${60-58*Math.log1p(n)/peak}`).join(" ")+" 80,60";
+  },[frame]);
   const onResult =
     preview && cursor && cursor.screenX >= (bounds.w * split) / 100;
   const px =
@@ -289,15 +288,13 @@ function App() {
       : null;
   return (
     <main className="desk viewer">
-      <header className="obshead"><div><div className="discipline" lang="en">Image explorer</div><h1>{frame?.name==="dev$pix.fits" && frame.object.toLowerCase().includes("m51") ? "M51 · 涡状星系" : frame?.object || "FITS 图像查看器"}</h1></div>
-        <div className="actions">
-          {!window.irafTrial&&<><button className="open" onClick={() => file.current?.click()}>
-            打开 FITS
-          </button>
-          <button onClick={quit}>退出</button></>}
-          <button aria-expanded={settings} aria-controls="display-tools" onClick={()=>setSettings(!settings)}>显示设置</button>
-        </div>
-      </header>
+      <DocumentBar title={frame?.name??"FITS 查看器"}>
+        <div className="zoom-group"><button aria-label="缩小" onClick={()=>zoom(.8)}>−</button>
+          <button className="zoom-value" aria-label="适应窗口" title="适应窗口" onClick={fit}>{Math.round(view.scale*100)}%</button>
+          <button aria-label="放大" onClick={()=>zoom(1.25)}>＋</button></div>
+        {!window.irafTrial&&<button className="toolbar-button" onClick={()=>file.current?.click()}><Icon name="folder"/>打开 FITS</button>}
+        <button className="toolbar-button inspector-toggle" title="显示或隐藏检查器" aria-label="显示设置" aria-expanded={settings} aria-controls="display-tools" onClick={()=>setSettings(!settings)}><Icon name="info"/></button>
+      </DocumentBar>
       <input
         type="file"
         hidden
@@ -310,19 +307,6 @@ function App() {
       />
       <section className={"work"+(settings?" settings-open":"")}>
         <article>
-          <nav>
-            <strong>{frame?.name ?? "图像"}</strong>
-            <div>
-              <button aria-label="缩小" onClick={() => zoom(1 / 1.25)}>
-                −
-              </button>
-              <span>{Math.round(view.scale * 100)}%</span>
-              <button aria-label="放大" onClick={() => zoom(1.25)}>
-                ＋
-              </button>
-              <button onClick={fit}>适应窗口</button>
-            </div>
-          </nav>
           <div
             ref={field}
             className={"field" + (drag ? " drag" : "")}
@@ -480,11 +464,50 @@ function App() {
               </div>
             )}
           </div>
+          <footer className="image-status"><span>X {cursor?cursor.x+1:"—"}　Y {cursor?cursor.y+1:"—"}
+            {px!==null&&<b>　{preview?(onResult?"结果":"原图"):"像素"} {number(px)} {frame?.unit}</b>}</span>
+            <span>{frame?`${frame.width} × ${frame.height} px`:"—"}</span></footer>
         </article>
-        <aside hidden={!settings} id="display-tools">
-          {!window.irafTrial&&<><h2>
-            方框平滑 <small>boxcar</small>
-          </h2>
+        <aside hidden={!settings} id="display-tools"><h2>检查器</h2>
+          <details open><summary>图像信息</summary><dl>
+            {frame?.object&&<><dt>目标</dt><dd>{frame.object}</dd></>}
+            {frame?.filter&&<><dt>波段</dt><dd>{frame.filter}</dd></>}
+            {frame?.exposure&&<><dt>曝光</dt><dd>{frame.exposure} s</dd></>}
+            <dt>BITPIX</dt><dd>{frame?.bitpix??"—"}</dd>
+            {frame?.unit&&<><dt>单位</dt><dd>{frame.unit}</dd></>}
+          </dl></details>
+          <details open><summary>显示拉伸</summary><div className="inspector-body">
+            <svg className="luma" viewBox="0 0 80 60" preserveAspectRatio="none" role="img" aria-label="图像灰度分布，采样像素计数为对数刻度"><title>图像灰度分布 · 对数计数</title><polygon points={distribution}/></svg>
+            {(["黑点", "白点"] as const).map((label, i) => (
+              <label key={label} className="level-row">
+                {label}
+
+                <input
+                  aria-label={label}
+                  title={label+" · "+number(i?high:low)}
+                  style={{background:`linear-gradient(to right,#087bfc ${range[i]}%,#d5d5d8 ${range[i]}%)`}}
+                  type="range"
+                  min="0"
+                  max="100"
+                  step="0.1"
+                  value={range[i]}
+                  onChange={(e) => {
+                    const p = Number(e.target.value);
+                    setRange(
+                      i
+                        ? [range[0], Math.max(range[0] + 0.1, p)]
+                        : [Math.min(range[1] - 0.1, p), range[1]],
+                    );
+                  }}
+                />
+                <output>{number(i?high:low)}</output>
+              </label>
+            ))}
+            <button className="reset" onClick={() => setRange([1, 99])}>
+              恢复自动范围
+            </button>
+          </div></details>
+          {!window.irafTrial&&<details><summary>方框平滑</summary><div className="inspector-body">
           <div className="kernel">
             <label>
               窗口宽度
@@ -552,76 +575,16 @@ function App() {
               : enabled && valid && !preview && !taskError
                 ? "正在计算…"
                 : "应用并另存 FITS"}
-          </button></>}
-          <section>
-            <h2>显示设置</h2>
-            <div className="ramp" />
-            <div className="range-label">
-              <span>显示拉伸</span>
-              <small>线性</small>
-            </div>
-            {(["黑点", "白点"] as const).map((label, i) => (
-              <label key={label}>
-                {label}
-                <output>{number(i ? high : low)}</output>
-                <input
-                  aria-label={label}
-                  type="range"
-                  min="0"
-                  max="100"
-                  step="0.1"
-                  value={range[i]}
-                  onChange={(e) => {
-                    const p = Number(e.target.value);
-                    setRange(
-                      i
-                        ? [range[0], Math.max(range[0] + 0.1, p)]
-                        : [Math.min(range[1] - 0.1, p), range[1]],
-                    );
-                  }}
-                />
-              </label>
-            ))}
-            <button className="reset" onClick={() => setRange([1, 99])}>
-              恢复自动范围
-            </button>
-          </section>
-          <section>
-            <h2>图像信息</h2>
-            <dl>
-              <dt>尺寸</dt>
-              <dd>{frame ? frame.width + " × " + frame.height : "—"}</dd>
-              <dt>BITPIX</dt>
-              <dd>{frame?.bitpix ?? "—"}</dd>
-              <dt>单位</dt>
-              <dd>{frame?.unit || "未指定"}</dd>
-              {frame?.object && (
-                <>
-                  <dt>天体</dt>
-                  <dd>{frame.object}</dd>
-                </>
-              )}
-            </dl>
-          </section>
+          </button>
+          </div></details>}
         </aside>
       </section>
-      <footer>
-        <span className="lamp" />
-        {window.irafTrial?"IRAF 内置样图":"本机会话"}
-        <span className="readout">
-          X {cursor ? cursor.x + 1 : "—"}　 Y {cursor ? cursor.y + 1 : "—"}　
-          {preview ? (onResult ? "结果值" : "原图值") : "像素值"}{" "}
-          <b>
-            {px !== null ? number(px) : "—"} {frame?.unit}
-          </b>
-        </span>
-      </footer>
     </main>
   );
 }
 const view = new URLSearchParams(location.search).get("view") || "image";
 const flow = ["ccd","phot","spec"].indexOf(view);
 createRoot(document.getElementById("root")!).render(
-  <Shell view={view}>{flow>=0 ? <Observations headers={headers} active={flow}/> :
+  <Shell view={view} headers={headers}>{flow>=0 ? <Observations headers={headers} active={flow}/> :
     view==="image" ? <App/> : <Guide/>}</Shell>
 );

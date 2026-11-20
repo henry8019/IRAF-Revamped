@@ -19,7 +19,7 @@ cd IRAF-Revamped
 | macOS | Double-click `Start.command` |
 | Linux (glibc) | Run `./Start.command` |
 
-The first launch needs internet access to prepare Python 3.12 and the locked dependencies. The built web interface ships in the repository. Run the same launcher again for offline use. Your default browser opens the local workbench on IRAF’s M51 image. Observation files are processed on your computer. Choose **退出** (Exit) in the viewer to shut down the service.
+The first launch needs internet access to prepare Python 3.12 and the locked dependencies. The built web interface ships in the repository. Run the same launcher again for offline use. Your default browser opens the local workbench on IRAF’s M51 image. Observation files are processed on your computer. Use the red window control and confirm **退出工作台** (Quit workbench) to stop the local service.
 
 ## 🧭 A first observing night
 
@@ -40,7 +40,7 @@ Choose **下载 FITS** (Download FITS) on any of those pages to save the corresp
 
 ## Open a FITS image of your own
 
-In the workbench, choose **FITS 图像查看器** (FITS viewer) → **打开 FITS** (Open FITS). Select a file whose primary HDU contains a two-dimensional image. To try boxcar smoothing, open **显示设置** (Display settings), set the window width and height to 3 pixels and tick **实时预览** (Live preview). Drag the divider to inspect the effect on a star, then choose **应用并另存 FITS** (Apply and save as FITS) to write a new file.
+In the workbench, choose **FITS 查看器** (FITS viewer) → **打开 FITS** (Open FITS). Select a file whose primary HDU contains a two-dimensional image. To try boxcar smoothing, expand **方框平滑** (Boxcar) in the inspector, set the window width and height to 3 pixels and tick **实时预览** (Live preview). Drag the divider to inspect the effect on a star, then choose **应用并另存 FITS** (Apply and save as FITS) to write a new file.
 
 The viewer accepts your own images. The three workflow pages use the bundled observing night. In the development build we process custom observing nights through scripts.
 

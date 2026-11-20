@@ -1,18 +1,9 @@
+import { DocumentBar } from "./window";
+import { Icon, workflows } from "./navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
-import "./observations.css";
 
 type Star = {ID:number; XCENTER:number; YCENTER:number; MSKY:number; FLUX:number; MAG:number; MERR:number};
 type Data = {wave:number[]; flux:number[]; unit:string; waveUnit:string; raw:number[][]; ccd:number[][]; slit:number[][]; stars:Star[]};
-export const workflows = [
-  {name:"CCD 预处理", subtitle:"CCD reduction", file:"calibrated-field.fits", icon:"layers"},
-  {name:"孔径测光", subtitle:"Aperture photometry", file:"photometry.fits", icon:"target"},
-  {name:"长缝光谱", subtitle:"Long-slit spectroscopy", file:"calibrated-spectrum.fits", icon:"wave"},
-];
-export function Icon({name}:{name:string}) {
-  const paths:Record<string,string> = {scope:"M3 17 6 14l5 4-3 3zm3-5 4-6 8 6-4 6zM12 5l2-3 8 6-2 3M11 18l2 4",home:"M3 10l9-7 9 7v10h-6v-6H9v6H3Z",layers:"m3 8 9-5 9 5-9 5Zm0 5 9 5 9-5M3 18l9 5 9-5",target:"M12 2v5m0 10v5M2 12h5m10 0h5M19 12a7 7 0 1 1-14 0 7 7 0 0 1 14 0Z",wave:"M2 15h4l2-6 3 10 3-16 3 12h5",image:"M3 4h18v16H3Zm1 13 5-5 3 3 3-5 5 7",download:"M12 3v12m-5-5 5 5 5-5M4 16v5h16v-5",folder:"M3 6h7l2 2h9v12H3Z"};
-  return <svg aria-hidden="true" width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"><path d={paths[name]}/></svg>;
-}
-
 function Raster({pixels, label, stars=[], selected=0, onSelect, limits}:{pixels:number[][];label:string;stars?:Star[];selected?:number;onSelect?:(index:number)=>void;limits?:[number,number]}) {
   const ref=useRef<HTMLCanvasElement>(null);
   useEffect(()=>{
@@ -81,7 +72,7 @@ declare global { interface Window { irafTrial?: {plate:{meta:string;url:string};
 export function Observations({headers,active}:{headers:Record<string,string>;active:number}) {
   const [d,setData]=useState<Data|null>(window.irafTrial?.data??null),[error,setError]=useState("");
   const [index,setIndex]=useState(40),[points,setPoints]=useState(false),[pinned,setPinned]=useState(false),[split,setSplit]=useState(50),[star,setStar]=useState(0);
-  const [inspectOpen,setInspectOpen]=useState(false);
+  const [inspectOpen,setInspectOpen]=useState(true);
   const selectStar=(i:number)=>{setStar(i);setInspectOpen(true);};
   const [pixel,setPixel]=useState<[number,number]|null>(null);
   useEffect(()=>{if(window.irafTrial)return;fetch("/api/observations",{headers}).then(async r=>{if(!r.ok)throw Error("无法读取观测结果，请重新启动本机工作台。");return r.json();}).then(setData).catch(e=>setError(e.message));},[headers]);
@@ -117,7 +108,10 @@ export function Observations({headers,active}:{headers:Record<string,string>;act
     if(x>=0&&y>=0&&x<d.ccd[0].length&&y<d.ccd.length) setPixel([x,y]);
   }
   return <main className="desk science">
-    <header className="obshead"><div><div className="discipline">模拟观测夜 <span>/</span> {current.subtitle}</div><h1>{current.name}</h1></div><div className="plate-actions"><button className="inspector-switch" aria-expanded={inspectOpen} aria-controls="product-inspector" onClick={()=>setInspectOpen(!inspectOpen)}>测量信息</button><button className="download" onClick={download} disabled={!d}><Icon name="download"/>下载 FITS</button></div></header>
+    <DocumentBar title={current.file}>
+      <button className="toolbar-button" onClick={download} disabled={!d}><Icon name="download"/>下载 FITS</button>
+      <button className="toolbar-button" title="测量信息" aria-label="测量信息" aria-expanded={inspectOpen} aria-controls="product-inspector" onClick={()=>setInspectOpen(!inspectOpen)}><Icon name="info"/></button>
+    </DocumentBar>
     {error&&<p role="alert">{error}</p>}{!d&&!error&&<p role="status">正在读取 FITS 产物…</p>}
     {d&&<><div className={"dashboard"+(inspectOpen?" inspect-open":"")}><section className="primary-panel"><div className="panelhead"><div><h2>{["图像校正对比","星源定位","一维提取光谱"][active]}</h2><code>{current.file}</code></div>{active===2&&<label className="sample-toggle"><input type="checkbox" checked={points} onChange={e=>setPoints(e.target.checked)}/>采样点</label>}</div>
     {active===2?<div className="chartwell"><div className="chart-top">强度 / {d.unit.toUpperCase()} <span>━　目标谱</span></div><Spectrum d={d} index={index} onIndex={setIndex} points={points} pinned={pinned} onPin={setPinned}/><div className="axis-title">波长 / Å</div></div>:

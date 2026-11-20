@@ -50,6 +50,8 @@ class Image:
     def response(self, pixels=None):
         meta = {"width": self.data.shape[1], "height": self.data.shape[0], "bitpix": self.bitpix,
                 "unit": str(self.header.get("BUNIT", "")), "object": str(self.header.get("OBJECT", "")),
+                "filter": str(self.header.get("FILTER", "")),
+                "exposure": str(self.header.get("EXPTIME", self.header.get("ITIME", ""))),
                 "id": self.id}
         encoded = base64.b64encode(json.dumps(meta).encode()).decode()
         display = np.asarray(self.data if pixels is None else pixels, dtype="<f8")
@@ -128,7 +130,7 @@ def serve(open_browser=True, ready_file=None):
     origin = f"http://127.0.0.1:{port}"
     token = secrets.token_urlsafe(32)
     app = FastAPI(docs_url=None, redoc_url=None, openapi_url=None)
-    server = uvicorn.Server(uvicorn.Config(app, log_config=None, access_log=False, ws="none"))
+    server = uvicorn.Server(uvicorn.Config(app, log_config=None, access_log=False, ws="none", timeout_graceful_shutdown=4))
     slot = asyncio.Semaphore(1)
     with (ROOT / "reference/fixtures/dev_pix.fits").open("rb") as stream:
         current = decode_image(stream, "dev$pix.fits")
