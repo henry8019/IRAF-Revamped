@@ -1,3 +1,4 @@
+import { version } from "../package.json";
 import { DocumentBar } from "./window";
 
 export function Guide() {
@@ -15,6 +16,7 @@ export function Guide() {
       <a className="download" href="?view=ccd">打开 CCD 工作区 →</a>
     </section>
     <section id="install"><h2 className="guide-heading">从 GitHub 启动</h2>
+      <p>当前工作台版本 <code>v{version}</code>。</p>
       <p>克隆仓库，在项目目录运行启动文件。首次启动需联网准备 Python 和科学计算依赖，此后可离线使用。</p>
       <pre><code>git clone https://github.com/henry8019/IRAF-Revamped.git</code></pre>
       <ul><li>Windows：双击 <code>Start.cmd</code></li><li>macOS：双击 <code>Start.command</code></li><li>Linux：在仓库目录运行 <code>./Start.command</code></li></ul>

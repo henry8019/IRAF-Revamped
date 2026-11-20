@@ -8,6 +8,8 @@ IRAF-Revamped 是我们对 **IRAF（Image Reduction and Analysis Facility，图�
 
 ## 🚀 从 GitHub 一键启动
 
+想直接试用发行版，可以[下载 v0.2.0 工作台 ZIP](https://github.com/henry8019/IRAF-Revamped/archive/refs/tags/v0.2.0.zip)，完整解压后运行下表中的启动文件。包内已含编译好的网页。也可以用下面的命令克隆仓库。[版本更新记录](CHANGELOG.md)
+
 ```sh
 git clone https://github.com/henry8019/IRAF-Revamped.git
 cd IRAF-Revamped
