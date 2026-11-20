@@ -491,7 +491,7 @@ function App({visible}:{visible:boolean}) {
                 <input
                   aria-label={label}
                   title={label+" · "+number(i?high:low)}
-                  style={{background:`linear-gradient(to right,#087bfc ${range[i]}%,#d5d5d8 ${range[i]}%)`}}
+                  style={{background:`linear-gradient(to right,var(--accent) ${range[i]}%,#46515f ${range[i]}%)`}}
                   type="range"
                   min="0"
                   max="100"
