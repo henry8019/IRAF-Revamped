@@ -1,3 +1,8 @@
 *.command text eol=lf
 *.cmd text eol=crlf
 *.fits binary
+*.html text eol=lf
+*.css text eol=lf
+*.js text eol=lf
+*.tsx text eol=lf
+*.yml text eol=lf

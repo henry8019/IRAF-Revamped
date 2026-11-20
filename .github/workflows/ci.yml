@@ -1,0 +1,58 @@
+name: Workbench CI
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  frontend:
+    name: Rebuild bundled frontend
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: '24'
+      - run: npm ci
+      - run: npm run build
+      - name: Compare the build with the files users launch
+        shell: bash
+        run: |
+          changes=$(git status --porcelain --untracked-files=all -- dist)
+          if [ -n "$changes" ]; then
+            printf '%s\n' "$changes"
+            echo 'Rebuild with npm run build and commit dist/ alongside the source.'
+            exit 1
+          fi
+
+  desktop:
+    name: Desktop (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
+        with:
+          python-version: '3.12'
+      - name: First launch from the clone
+        run: python tests/launch_smoke.py
+      - name: Relaunch with dependency downloads disabled
+        run: python tests/launch_smoke.py
+        env:
+          UV_OFFLINE: '1'
+      - name: Check boxcar values and desktop interactions
+        if: runner.os == 'Linux'
+        run: |
+          .runtime/uv sync --locked --group test
+          .venv/bin/python -m unittest discover -s tests
+          .venv/bin/python -m playwright install --with-deps chromium
+          .venv/bin/python tests/desktop_ui.py

@@ -26,7 +26,10 @@ with TemporaryDirectory() as tmp:
             with urlopen(req, timeout=15) as response:
                 return response.read()
         html = request("/").decode()
-        for asset in re.findall(r'(?:src|href)="(/assets/[^"]+)"', html):
+        assets = re.findall(r'(?:src|href)="(/assets/[^"]+)"', html)
+        assert any(asset.endswith(".js") for asset in assets)
+        assert any(asset.endswith(".css") for asset in assets)
+        for asset in assets:
             assert len(request(asset)) > 100
         assert len(request("/api/current")) == 512 * 512 * 8
         assert len(json.loads(request("/api/observations"))["stars"]) == 2
