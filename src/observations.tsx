@@ -3,7 +3,7 @@ import {DocumentBar} from "./window";
 import {workflows} from "./navigation";
 
 type Preview = {width:number;height:number;step:number;rows:number;cols:number;pixels:string};
-type Result = {id:string;summary:string;image?:Preview;signal?:(number|null)[]};
+type Result = {id:string;summary:string;image?:Preview;aperture?:number[];unit?:string;signal?:(number|null)[]};
 
 function PreviewPlot({result,pick}:{result:Result;pick?:(x:number,y:number)=>void}) {
   const [cursor,setCursor]=useState("");
@@ -22,15 +22,27 @@ function PreviewPlot({result,pick}:{result:Result;pick?:(x:number,y:number)=>voi
         image.data.set([v,v,v,255],i*4);
       }
       ctx.putImageData(image,0,0);
+      if(result.aperture){
+        const [x,y,...radii]=result.aperture;
+        radii.forEach((r,i)=>{
+          ctx.strokeStyle=i===0?"#8ff3de":"#8bbfff";ctx.lineWidth=.8;ctx.beginPath();
+          ctx.arc((x-1)/result.image!.step+.5,(result.image!.rows-y)/result.image!.step+.5,r/result.image!.step,0,2*Math.PI);
+          ctx.stroke();
+        });
+      }
     } else if(result.signal){
       const values=result.signal, finite=values.filter((v):v is number=>v!==null);
       const low=Math.min(...finite), high=Math.max(...finite);
       node.width=800;node.height=250;
+      ctx.fillStyle="#b9c6d3";ctx.font="12px monospace";
+      ctx.fillText(high.toPrecision(4),2,16);ctx.fillText(low.toPrecision(4),2,222);
+      ctx.fillText("1 px",62,245);ctx.fillText(values.length+" px",728,245);
+      ctx.strokeStyle="#46515f";ctx.beginPath();ctx.moveTo(60,5);ctx.lineTo(60,225);ctx.lineTo(795,225);ctx.stroke();
       ctx.strokeStyle="#81dcd0";ctx.lineWidth=1.5;ctx.beginPath();
       let start=true;
       values.forEach((v,i)=>{
         if(v===null){start=true;return;}
-        const x=4+792*i/Math.max(1,values.length-1), y=245-240*(v-low)/(high-low||1);
+        const x=62+730*i/Math.max(1,values.length-1), y=223-216*(v-low)/(high-low||1);
         if(start) ctx.moveTo(x,y); else ctx.lineTo(x,y);
         start=false;
       });
@@ -39,12 +51,20 @@ function PreviewPlot({result,pick}:{result:Result;pick?:(x:number,y:number)=>voi
   },[result]);
   return <figure><canvas ref={canvas} onPointerMove={e=>{
     const im=result.image;
-    if(!im)return;
     const rect=e.currentTarget.getBoundingClientRect();
+    if(!im){
+      const flux=result.signal;
+      if(flux){
+        const fraction=((e.clientX-rect.left)*800/rect.width-62)/730;
+        const i=Math.min(flux.length-1,Math.max(0,Math.round(fraction*(flux.length-1))));
+        setCursor((i+1)+" px · "+(flux[i]??"无效")+" "+result.unit);
+      }
+      return;
+    }
     const x=1+im.step*Math.min(im.width-1,Math.floor((e.clientX-rect.left)*im.width/rect.width));
     const y=im.rows-im.step*Math.min(im.height-1,Math.floor((e.clientY-rect.top)*im.height/rect.height));
     setCursor(x+", "+y);
-  }} onPointerLeave={()=>setCursor("")} onClick={()=>{if(pick&&cursor){const [x,y]=cursor.split(", ").map(Number);pick(x,y);}}} aria-label={result.image?"观测图像预览":"提取光谱"}/><figcaption>{result.summary}{cursor && " · X, Y = "+cursor}</figcaption></figure>;
+  }} onPointerLeave={()=>setCursor("")} onClick={()=>{if(pick&&cursor){const [x,y]=cursor.split(", ").map(Number);pick(x,y);}}} aria-label={result.image?"观测图像预览":"提取光谱"}/><figcaption>{result.summary}{cursor && (result.image?" · X, Y = ":" · ")+cursor}</figcaption></figure>;
 }
 
 export function Observations({kind,active,imported,headers}:{kind:string;active:boolean;imported:File|null;headers:Record<string,string>}) {

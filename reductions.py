@@ -78,7 +78,7 @@ def aperture(image, form):
     table = fits.BinTableHDU.from_columns([fits.Column(name=k,format="D",array=[v],
                  unit=unit if k in ("MSKY","FLUX") else None) for k,v in fields.items()],name="PHOTOMETRY")
     table.header.add_history("Pixel-center aperture; median annular sky subtracted.")
-    return table, dict(image=thumbnail(image.data),summary=f"({x:g}, {y:g}) · 孔径 {source.size} px · 天空 {background:.6g} · 净通量 {flux:.8g} {unit or '（原图计数）'}")
+    return table, dict(image=thumbnail(image.data),aperture=[x,y,r,inner,outer],summary=f"({x:g}, {y:g}) · 孔径 {source.size} px · 天空 {background:.6g} · 净通量 {flux:.8g} {unit or '（原图计数）'}")
 
 
 def extract(image, form):
@@ -106,7 +106,7 @@ def extract(image, form):
         if key in image.header:
             hdu.header[key]=image.header[key]
     hdu.header.add_history(f"Dispersion {axis}; sum [{lo}:{hi}]; median sky [{sl}:{sh}]")
-    return hdu, dict(signal=[float(v) if np.isfinite(v) else None for v in flux],
+    return hdu, dict(unit=str(image.header.get("BUNIT","原图计数")), signal=[float(v) if np.isfinite(v) else None for v in flux],
                      summary=f"{flux.size} 谱点 · 色散轴 {axis} · 孔径 {lo}–{hi} · 背景 {sl}–{sh} · 横轴为像素")
 
 
