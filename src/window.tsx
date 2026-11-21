@@ -25,11 +25,9 @@ export function Shell({view,headers,navigate,children}:{view:string;headers:Reco
   const confirm=useRef<HTMLDialogElement>(null);
   async function quit() {
     try {
-      if(!window.irafTrial) {
-        const response=await fetch("/api/exit",{method:"POST",headers});
-        if(!response.ok) throw Error();
-        sessionStorage.removeItem("session");
-      }
+      const response=await fetch("/api/exit",{method:"POST",headers});
+      if(!response.ok) throw Error();
+      sessionStorage.removeItem("session");
       setClosed(true);
     } catch {setMessage("退出未完成，请检查本机服务。");}
   }
@@ -69,9 +67,9 @@ export function Shell({view,headers,navigate,children}:{view:string;headers:Reco
       {minimized&&<button className="restore" onClick={()=>setMinimized(false)}>还原窗口</button>}
     </header>
     <div className="source-list" hidden={!sidebar||minimized}>
-      <nav aria-label="工作台导航"><p>工作区</p>{link("image","FITS 查看器","image")}<p>模拟观测夜</p>
+      <nav aria-label="工作台导航"><p>工作区</p>{link("image","FITS 查看器","image")}<p>观测处理</p>
       {workflows.map((f,i)=>link(["ccd","phot","spec"][i],f.name,f.icon))}</nav>
-      <div className="source-bottom">{link("start","试用与安装","download")}</div>
+      <div className="source-bottom">{link("start","使用与安装","download")}</div>
     </div>
     <div id="workspace" hidden={minimized} tabIndex={-1}><ToolbarHost.Provider value={host}>{children}</ToolbarHost.Provider></div>
     {movable && edges.map(edge=><div key={edge} aria-hidden="true" data-edge={edge} className="window-edge"

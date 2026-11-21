@@ -28,7 +28,9 @@ with tempfile.TemporaryDirectory() as tmp:
             requests = []
             page.on("request", lambda req: requests.append((req.resource_type,req.url.split("?",1)[0])))
             page.goto(url,wait_until="networkidle")
-            expect(page.get_by_role("heading",name="dev$pix.fits")).to_be_visible()
+            expect(page.get_by_role("button",name="选择二维 FITS 图像")).to_be_visible()
+            page.locator(".viewer input[type=file]").set_input_files(root/"reference/fixtures/dev_pix.fits")
+            expect(page.get_by_role("heading",name="dev_pix.fits")).to_be_visible()
             expect(page.get_by_role("heading",name="检查器")).to_be_visible()
             expect(page.locator(".obs")).to_have_css("color-scheme", "dark")
             page.emulate_media(reduced_motion="reduce")
@@ -64,7 +66,7 @@ with tempfile.TemporaryDirectory() as tmp:
             assert abs(original_window["width"] - resized["width"] - 150) <= 1
             assert abs(original_window["height"] - resized["height"] - 110) <= 1
             expect(zoom).to_have_text(manual_zoom)
-            drag(page.get_by_role("heading",name="dev$pix.fits"), 85, 65)
+            drag(page.get_by_role("heading",name="dev_pix.fits"), 85, 65)
             moved = window.bounding_box()
             assert abs(moved["x"] - resized["x"] - 85) <= 1, (moved,resized)
             assert abs(moved["y"] - resized["y"] - 65) <= 1
@@ -88,7 +90,7 @@ with tempfile.TemporaryDirectory() as tmp:
             page.get_by_role("link",name="CCD 预处理").click()
             assert window.bounding_box() == positioned
             page.get_by_role("link",name="FITS 查看器").click()
-            expect(page.get_by_role("heading",name="dev$pix.fits")).to_be_visible()
+            expect(page.get_by_role("heading",name="dev_pix.fits")).to_be_visible()
             assert sum(kind=="document" for kind,_ in requests) == 1, "Switching views reloaded the desktop"
             expect(zoom).to_have_text(manual_zoom)
             page.get_by_role("button",name="适应窗口").click()
@@ -107,7 +109,7 @@ with tempfile.TemporaryDirectory() as tmp:
             expect(page.locator("#workspace")).to_be_visible()
             page.set_viewport_size({"width":1280,"height":720})
             page.wait_for_function("document.querySelector('.obs').getBoundingClientRect().right <= innerWidth + 1")
-            page.locator("input[type=file]").set_input_files(root/"examples/observing-night/results/calibrated-field.fits")
+            page.locator(".viewer input[type=file]").set_input_files(root/"tests/fixtures/observing-night/calibrated-field.fits")
             expect(page.get_by_role("heading",name="calibrated-field.fits")).to_be_visible()
             page.get_by_text("方框平滑",exact=True).click()
             page.get_by_label("实时预览").check()
@@ -116,22 +118,24 @@ with tempfile.TemporaryDirectory() as tmp:
                 page.get_by_role("button",name="应用并另存 FITS").click()
             assert captured.value.path().read_bytes().startswith(b"SIMPLE")
             page.get_by_role("link",name="CCD 预处理").click()
-            split = page.get_by_role("slider",name="原图与校正图分界线")
-            split.focus()
-            split.press("ArrowRight")
-            expect(split).to_have_value("51")
+            page.get_by_role("button",name="运行CCD 预处理").click()
+            expect(page.get_by_role("alert")).to_contain_text("至少选择")
             page.get_by_role("link",name="孔径测光").click()
-            page.get_by_role("button",name="选择星源 2").click()
-            expect(page.get_by_role("button",name="源 2",exact=True)).to_have_attribute("aria-pressed","true")
+            page.get_by_label("中心 X").fill("19.4")
+            page.get_by_label("中心 Y").fill("22.1")
+            page.get_by_role("button",name="运行孔径测光").click()
+            expect(page.get_by_role("button",name="下载结果 FITS")).to_be_visible()
             page.get_by_role("link",name="长缝光谱").click()
-            page.get_by_role("slider").press("Home")
-            expect(page.get_by_role("slider")).to_have_attribute("aria-valuenow","1")
-            page.get_by_role("link",name="试用与安装").click()
-            expect(page.get_by_role("heading",name="试用与安装")).to_be_visible()
+            for label,value in zip(("目标起点","目标终点","天空起点","天空终点"),("10","12","2","4")):
+                page.get_by_label(label).fill(value)
+            page.get_by_role("button",name="运行长缝光谱").click()
+            expect(page.get_by_role("button",name="下载结果 FITS")).to_be_visible()
+            page.get_by_role("link",name="使用与安装").click()
+            expect(page.get_by_role("heading",name="使用与安装")).to_be_visible()
             page.get_by_role("link",name="打开 CCD 工作区").click()
-            expect(page.get_by_role("slider",name="原图与校正图分界线")).to_have_value("51")
+            expect(page.get_by_role("button",name="运行CCD 预处理")).to_be_visible()
             page.go_back()
-            expect(page.get_by_role("heading",name="试用与安装")).to_be_visible()
+            expect(page.get_by_role("heading",name="使用与安装")).to_be_visible()
             page.go_forward()
             expect(page.get_by_role("link",name="CCD 预处理")).to_have_attribute("aria-current","page")
             for link in ["长缝光谱","孔径测光","CCD 预处理","FITS 查看器"]:
@@ -139,8 +143,7 @@ with tempfile.TemporaryDirectory() as tmp:
             expect(page.get_by_role("heading",name="calibrated-field.fits")).to_be_visible()
             expect(page.get_by_label("实时预览")).to_be_checked()
             assert sum(kind=="document" for kind,_ in requests) == 1
-            for endpoint in ("/api/current","/api/observations"):
-                assert sum(path.endswith(endpoint) for _,path in requests) == 1, endpoint
+            assert sum(path.endswith("/api/current") for _,path in requests) == 1
             page.get_by_role("button",name="退出",exact=True).click()
             page.get_by_role("button",name="取消").click()
             expect(page.get_by_role("dialog")).to_be_hidden()

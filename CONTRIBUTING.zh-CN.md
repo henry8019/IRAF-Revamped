@@ -6,7 +6,7 @@
 
 ## 修改代码
 
-Fork 仓库，克隆自己的副本，然后新建工作分支。React 界面在 `src/`，本地 HTTP 服务在 `workbench.py`，方框平滑算法在 `boxcar.py`。三个观测流程页面读取 `examples/observing-night/results/` 中的样例产物。
+Fork 仓库，克隆自己的副本，然后新建工作分支。React 界面在 `src/`，本地 HTTP 服务在 `workbench.py`，方框平滑算法在 `boxcar.py`。导入文件的三项计算在 `reductions.py` 中。
 
 修改前端请使用 Node.js 24，在仓库根目录执行以下命令。把重新构建的 `dist/` 和源码一起提交，其他人克隆后就能直接启动，无需安装 Node.js。
 
@@ -18,7 +18,7 @@ git status --short -- dist
 
 ## 在本地验证
 
-先用 Python 3.12 执行 `python tests/launch_smoke.py`（部分系统使用 `python3`）。它会调用当前平台的一键启动入口、准备运行环境、读取样例 FITS 产物，并关闭服务。将环境变量 `UV_OFFLINE` 设为 `1` 后再执行一次，可以验证已准备好的环境能否离线启动。
+先用 Python 3.12 执行 `python tests/launch_smoke.py`（部分系统使用 `python3`）。它会调用当前平台的一键启动入口、准备运行环境、检查空工作区，并关闭服务。将环境变量 `UV_OFFLINE` 设为 `1` 后再执行一次，可以验证已准备好的环境能否离线启动。
 
 然后在仓库根目录执行以下命令。可将命令中的 `uv` 换成启动器已下载的可执行文件，即 macOS 和 Linux 上的 `.runtime/uv`，或 PowerShell 中的 `.\.runtime\uv.exe`。全新 Linux 环境可用 `install --with-deps chromium` 一并安装浏览器的系统依赖。
 

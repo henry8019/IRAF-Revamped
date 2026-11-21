@@ -118,3 +118,14 @@
     to {opacity:1;transform:translateY(0)}
   }
 }
+
+.import-empty {position:absolute;inset:0;margin:auto;width:max-content;height:42px;padding:0 18px;background:var(--raised);border:1px solid var(--rule);border-radius:7px}
+.reduce-view {max-width:1020px;padding:24px 30px;margin:auto}
+.reduce-view fieldset {border:1px solid var(--rule);border-radius:9px;background:var(--surface);padding:16px 20px}
+.reduce-view legend {padding:0 8px}.reduce-view label {display:grid;gap:6px;margin:10px 0}
+.reduce-view p,.reduce-view figcaption {color:var(--muted);line-height:1.55}
+.reduce-view .params {display:flex;gap:14px;flex-wrap:wrap}
+.reduce-view input,.reduce-view select {background:#171d24;color:var(--ink);border:1px solid var(--rule);border-radius:5px;padding:6px}
+.reduce-view input[type=number] {max-width:120px}.reduce-view button {margin-top:10px}
+.reduce-view figure {margin:0}.reduce-view canvas {background:var(--well);max-width:100%;max-height:38vh}
+.reduce-view [role=alert] {color:#ffb4a8}
