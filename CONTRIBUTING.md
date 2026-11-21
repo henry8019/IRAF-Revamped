@@ -6,7 +6,7 @@ To try the app, follow [Clone and launch](README.md#-clone-and-launch). To repor
 
 ## Work on a change
 
-Fork the repository, clone your fork, and create a topic branch. The React interface lives in `src/`, the local HTTP service in `workbench.py`, and the boxcar implementation in `boxcar.py`. The three observing-night pages read products from `examples/observing-night/results/`.
+Fork the repository, clone your fork, and create a topic branch. The React interface lives in `src/`, the local HTTP service in `workbench.py`, and the boxcar implementation in `boxcar.py`. The imported-observation algorithms live in `reductions.py`.
 
 For a frontend change, use Node.js 24 and run the following in the repository root. Commit the rebuilt `dist/` with the source so a fresh clone can launch without Node.js.
 
@@ -18,7 +18,7 @@ git status --short -- dist
 
 ## Run the checks
 
-Start with Python 3.12 and run `python tests/launch_smoke.py` (use `python3` if needed). This exercises the platform launcher, prepares its runtime, reads a bundled FITS product, and shuts down the service. A second run with the environment variable `UV_OFFLINE=1` checks that the prepared runtime works offline.
+Start with Python 3.12 and run `python tests/launch_smoke.py` (use `python3` if needed). This exercises the platform launcher, prepares its runtime, checks the initial empty workspace, and shuts down the service. A second run with the environment variable `UV_OFFLINE=1` checks that the prepared runtime works offline.
 
 Run the following from the repository root. For `uv`, use the executable the launcher downloaded at `.runtime/uv` on macOS or Linux, or `.\.runtime\uv.exe` in PowerShell. On a fresh Linux desktop, use `install --with-deps chromium` to install Chromium’s system dependencies.
 

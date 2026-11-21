@@ -31,13 +31,11 @@ with TemporaryDirectory() as tmp:
         assert any(asset.endswith(".css") for asset in assets)
         for asset in assets:
             assert len(request(asset)) > 100
-        assert len(request("/api/current")) == 512 * 512 * 8
-        assert len(json.loads(request("/api/observations"))["stars"]) == 2
-        assert request("/api/observations/calibrated-spectrum.fits").startswith(b"SIMPLE")
+        assert request("/api/current") == b""
     finally:
         if ready.exists() and ready.stat().st_size:
             request("/api/exit", "POST")
         if proc.poll() is None:
             proc.wait(timeout=20)
     assert proc.returncode == 0
-print("PASS: launcher, local browser assets, M51 image, star catalog, FITS export and exit")
+print("PASS: launcher, local browser assets, empty workspace and exit")

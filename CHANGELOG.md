@@ -1,5 +1,11 @@
 # Changelog · 更新记录
 
+## v0.3.0 · 2026-11-21
+
+The local workbench starts empty. Import your own FITS exposures for master-frame CCD correction, single-source aperture photometry, and straight-aperture long-slit extraction. Results are computed locally and can be downloaded as FITS. Spectral coordinates are detector pixels.
+
+工作台从空工作区启动。三个入口均处理导入的观测文件，支持主校准帧校正、指定源孔径测光和直线孔径光谱提取。每项结果都能导出 FITS。光谱坐标为探测器像素。
+
 ## v0.2.0 · 2026-11-21
 
 First public release of IRAF-Revamped, an independent workbench inspired by IRAF Community Edition 2.18.2.

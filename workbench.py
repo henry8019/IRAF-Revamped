@@ -21,6 +21,7 @@ from fastapi.responses import FileResponse
 from pydantic import BaseModel, Field
 from starlette.concurrency import run_in_threadpool
 from boxcar import boxcar
+from reductions import reduce_uploaded, thumbnail
 
 
 ROOT = Path(__file__).resolve().parent
@@ -75,7 +76,11 @@ def decode_image(stream, filename):
     try:
         with fits.open(stream, memmap=False) as hdus:
             hdu = hdus[0]
+            if hdu.header.get("NAXIS")==0 and len(hdus)==2 and isinstance(hdus[1], fits.CompImageHDU):
+                hdu = hdus[1]
             header = hdu.header.copy()
+            if hdu is not hdus[0]:
+                header.extend(hdus[0].header, strip=True, unique=True)
             if header.get("NAXIS") != 2:
                 raise ValueError("请选择主 HDU 包含二维图像的 FITS 文件。")
             width, height = header["NAXIS1"], header["NAXIS2"]
@@ -102,22 +107,6 @@ def export_fits(image, pixels, params):
     return Response(output.getvalue(), media_type="application/fits")
 
 
-results = ROOT / "examples" / "observing-night" / "results"
-products = ("calibrated-field.fits", "photometry.fits", "calibrated-spectrum.fits")
-
-def observations():
-    catalog = fits.getdata(results / products[1], ext=1, memmap=False)
-    spectrum, h = fits.getdata(results / products[2], header=True, memmap=False)
-    wave = h["CRVAL1"] + (np.arange(len(spectrum)) + 1 - h["CRPIX1"]) * h["CDELT1"]
-    def pixels(name):
-        return fits.getdata(results / name, memmap=False).tolist()
-    return {"wave": wave.tolist(), "flux": spectrum.tolist(), "unit": h["BUNIT"],
-            "waveUnit": h["CUNIT1"], "raw": pixels("raw-field.fits"), "ccd": pixels(products[0]),
-            "slit": pixels("target2d.fits"), "stars": [
-                {key: float(row[key]) for key in ("ID","XCENTER","YCENTER","MSKY","FLUX","MAG","MERR")}
-                for row in catalog]}
-
-
 RELEASE_FILES = ("IRAF-Workbench-Windows-x64.exe","IRAF-Workbench-Ubuntu-amd64.deb","IRAF-Workbench-macOS.zip")
 
 
@@ -132,8 +121,8 @@ def serve(open_browser=True, ready_file=None):
     app = FastAPI(docs_url=None, redoc_url=None, openapi_url=None)
     server = uvicorn.Server(uvicorn.Config(app, log_config=None, access_log=False, ws="none", timeout_graceful_shutdown=4))
     slot = asyncio.Semaphore(1)
-    with (ROOT / "reference/fixtures/dev_pix.fits").open("rb") as stream:
-        current = decode_image(stream, "dev$pix.fits")
+    current = None
+    outputs = {}
     cached = None
 
     @app.middleware("http")
@@ -169,9 +158,8 @@ def serve(open_browser=True, ready_file=None):
 
     @app.get("/api/current")
     def current_image():
-        return current.response()
+        return current.response() if current else Response(status_code=204)
 
-    app.get("/api/observations")(observations)
     release_dir = ROOT / "build" / "downloads"
 
     @app.get("/api/downloads")
@@ -184,17 +172,49 @@ def serve(open_browser=True, ready_file=None):
             raise HTTPException(404)
         return FileResponse(release_dir / name, filename=name)
 
-    @app.get("/api/observations/{name}")
-    def observation_file(name: str):
-        if name not in products:
-            raise HTTPException(404)
-        return FileResponse(results / name, filename=name, media_type="application/fits")
+    @app.post("/api/inspect")
+    async def inspect_input(request: Request):
+        size = request.headers.get("content-length", "")
+        if not size.isdecimal() or int(size) > MAX_BYTES:
+            raise HTTPException(413, "图像须小于 192 MiB。")
+        async with slot:
+            async with request.form(max_files=1, max_fields=0) as form:
+                field = form.get("science")
+                if not getattr(field, "filename", None):
+                    raise HTTPException(422, "请选择 FITS 文件。")
+                image = await run_in_threadpool(decode_image, field.file, "input.fits")
+                try:
+                    return await run_in_threadpool(thumbnail, image.data)
+                except ValueError as exc:
+                    raise HTTPException(422, str(exc)) from exc
+
+    @app.post("/api/reduce/{kind}")
+    async def reduce(kind: Literal["ccd","phot","spec"], request: Request):
+        size = request.headers.get("content-length", "")
+        if not size.isdecimal() or int(size) > MAX_BYTES:
+            raise HTTPException(413, "上传总量须小于 192 MiB。")
+        async with slot:
+            async with request.form(max_files=4, max_fields=12) as form:
+                try:
+                    data, result = await run_in_threadpool(reduce_uploaded, kind, form, decode_image)
+                except ValueError as exc:
+                    raise HTTPException(422, str(exc)) from exc
+            key = secrets.token_hex(12)
+            outputs[kind] = (key, data)
+            return {**result, "id": key}
+
+    @app.get("/api/output/{kind}/{key}")
+    def output(kind: Literal["ccd","phot","spec"], key: str):
+        stored = outputs.get(kind)
+        if not stored or stored[0] != key:
+            raise HTTPException(409, "结果已更新，请重新运行。")
+        return Response(stored[1], media_type="application/fits")
 
     @app.post("/api/boxcar/{action}")
     async def process(action: Literal["preview", "export"], params: Parameters):
         nonlocal cached
         async with slot:
-            if params.image_id != current.id:
+            if current is None or params.image_id != current.id:
                 raise HTTPException(409, "当前图像已更换，请重新打开后处理。")
             if cached is None or cached[0] != params:
                 try:

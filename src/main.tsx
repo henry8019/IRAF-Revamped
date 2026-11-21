@@ -54,7 +54,7 @@ function drawPixels(
   ctx.putImageData(image, 0, 0);
 }
 
-function App({visible}:{visible:boolean}) {
+function App({visible,onImport}:{visible:boolean;onImport:(f:File)=>void}) {
   const [frame, setFrame] = useState<Frame | null>(null);
   const [settings,setSettings]=useState(true);
   const [busy, setBusy] = useState(true),
@@ -160,8 +160,7 @@ function App({visible}:{visible:boolean}) {
     setBusy(true);
     setError("");
     try {
-      const plate = window.irafTrial?.plate;
-      const res = plate ? await fetch(plate.url) : await fetch(f ? "/api/open" : "/api/current", {
+      const res = await fetch(f ? "/api/open" : "/api/current", {
         method: f ? "POST" : "GET",
         headers: f
           ? { ...headers, "X-Filename": encodeURIComponent(f.name) }
@@ -173,7 +172,8 @@ function App({visible}:{visible:boolean}) {
           (await res.json().catch(() => ({}))).detail ||
             "无法连接本机会话，请重新启动工作台。",
         );
-      const meta = JSON.parse(atob(plate?.meta ?? res.headers.get("X-Image")!));
+      if (res.status === 204) return;
+      const meta = JSON.parse(atob(res.headers.get("X-Image")!));
       const pixels = new Float64Array(await res.arrayBuffer());
       const sorted: number[] = [];
       for (
@@ -184,13 +184,14 @@ function App({visible}:{visible:boolean}) {
         if (Number.isFinite(pixels[i])) sorted.push(pixels[i]);
       sorted.sort((a, b) => a - b);
       if (id !== seq.current) return;
+      if(f) onImport(f);
       autoFit.current=true;
       setFrame({
         ...meta,
         pixels,
         sorted,
         name: decodeURIComponent(
-          res.headers.get("X-Filename") ?? "dev$pix.fits",
+          res.headers.get("X-Filename") ?? "image.fits",
         ),
       });
       setRange([1, 99]);
@@ -296,14 +297,14 @@ function App({visible}:{visible:boolean}) {
         <div className="zoom-group"><button aria-label="缩小" onClick={()=>zoom(.8)}>−</button>
           <button className="zoom-value" aria-label="适应窗口" title="适应窗口" onClick={fit}>{Math.round(view.scale*100)}%</button>
           <button aria-label="放大" onClick={()=>zoom(1.25)}>＋</button></div>
-        {!window.irafTrial&&<button className="toolbar-button" onClick={()=>file.current?.click()}><Icon name="folder"/>打开 FITS</button>}
+        <button className="toolbar-button" onClick={()=>file.current?.click()}><Icon name="folder"/>打开 FITS</button>
         <button className="toolbar-button inspector-toggle" title="显示或隐藏检查器" aria-label="显示设置" aria-expanded={settings} aria-controls="display-tools" onClick={()=>setSettings(!settings)}><Icon name="info"/></button>
       </DocumentBar>}
       <input
         type="file"
         hidden
         ref={file}
-        accept=".fits,.fit,.fts"
+        accept=".fits,.fit,.fts,.fz"
         onChange={(e) => {
           if (e.target.files?.[0]) void open(e.target.files[0]);
           e.target.value = "";
@@ -349,7 +350,7 @@ function App({visible}:{visible:boolean}) {
             onDrop={(e) => {
               e.preventDefault();
               setDrag(false);
-              if (!window.irafTrial && e.dataTransfer.files[0]) void open(e.dataTransfer.files[0]);
+              if (e.dataTransfer.files[0]) void open(e.dataTransfer.files[0]);
             }}
             onPointerDown={(e) => {
               last.current = { x: e.clientX, y: e.clientY };
@@ -459,6 +460,7 @@ function App({visible}:{visible:boolean}) {
                 </div>
               </>
             )}
+            {!frame && !busy && !error && <button className="import-empty" onClick={()=>file.current?.click()}>选择二维 FITS 图像</button>}
             {busy && (
               <span className="notice" role="status">
                 正在读取 FITS…
@@ -513,7 +515,7 @@ function App({visible}:{visible:boolean}) {
               恢复自动范围
             </button>
           </div></details>
-          {!window.irafTrial&&<details><summary>方框平滑</summary><div className="inspector-body">
+          <details><summary>方框平滑</summary><div className="inspector-body">
           <div className="kernel">
             <label>
               窗口宽度
@@ -582,7 +584,7 @@ function App({visible}:{visible:boolean}) {
                 ? "正在计算…"
                 : "应用并另存 FITS"}
           </button>
-          </div></details>}
+          </div></details>
         </aside>
       </section>
     </main>
@@ -595,6 +597,7 @@ function currentView() {
 function Workbench() {
   const [view,setView]=useState(currentView);
   const [imageOpened,setImageOpened]=useState(view==="image");
+  const [imported,setImported]=useState<File|null>(null);
   const flow=["ccd","phot","spec"].indexOf(view);
 
   function show(next:string) {
@@ -619,8 +622,8 @@ function Workbench() {
   }
 
   return <Shell view={view} headers={headers} navigate={navigate}>
-    {imageOpened && <App visible={view==="image"}/>}
-    <Observations headers={headers} active={flow}/>
+    {imageOpened && <App visible={view==="image"} onImport={setImported}/>}
+    {["ccd","phot","spec"].map((kind,i)=><Observations key={kind} kind={kind} active={flow===i} imported={imported} headers={headers}/>)}
     {flow<0 && view!=="image" && <Guide/>}
   </Shell>;
 }
