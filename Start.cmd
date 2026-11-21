@@ -1,6 +1,7 @@
 @echo off
 setlocal
 pushd "%~dp0" || exit /b 1
+if "%~1"=="" echo Starting the local workbench. Keep this window open while using it.
 if not exist ".runtime\uv.exe" (
     powershell.exe -NoProfile -ExecutionPolicy Bypass -File "scripts\bootstrap.ps1"
     if errorlevel 1 goto failed

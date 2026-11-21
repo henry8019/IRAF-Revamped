@@ -9,6 +9,7 @@ import secrets
 import socket
 import tempfile
 import webbrowser
+from threading import Thread
 from pathlib import Path
 from typing import Literal
 
@@ -119,7 +120,28 @@ def serve(open_browser=True, ready_file=None):
     origin = f"http://127.0.0.1:{port}"
     token = secrets.token_urlsafe(32)
     app = FastAPI(docs_url=None, redoc_url=None, openapi_url=None)
-    server = uvicorn.Server(uvicorn.Config(app, log_config=None, access_log=False, ws="none", timeout_graceful_shutdown=4))
+    url = f"{origin}/#{token}"
+
+    def open_workbench():
+        try:
+            opened = webbrowser.open(url)
+        except (OSError, webbrowser.Error):
+            opened = False
+        if not opened:
+            print("Browser did not open. Copy the full address above into your browser.", flush=True)
+
+    class WorkbenchServer(uvicorn.Server):
+        async def startup(self, sockets=None):
+            await super().startup(sockets=sockets)
+            if not self.started:
+                return
+            if ready_file:
+                ready_file.write_text(url, encoding="utf-8")
+            if open_browser:
+                print(f"Workbench ready. Keep this window open.\nOpen this local session in your browser:\n{url}", flush=True)
+                Thread(target=open_workbench, daemon=True).start()
+
+    server = WorkbenchServer(uvicorn.Config(app, log_config=None, access_log=False, ws="none", timeout_graceful_shutdown=4))
     slot = asyncio.Semaphore(1)
     current = None
     outputs = {}
@@ -233,11 +255,6 @@ def serve(open_browser=True, ready_file=None):
 
     app.mount("/", StaticFiles(directory=ROOT / "dist", html=True))
     listener.listen()
-    url = f"{origin}/#{token}"
-    if ready_file:
-        ready_file.write_text(url, encoding="utf-8")
-    if open_browser:
-        webbrowser.open(url)
     try:
         server.run(sockets=[listener])
     finally:
